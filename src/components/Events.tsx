@@ -1,51 +1,165 @@
-import React, { useState } from 'react';
-import { Search, Plus, Calendar as CalendarIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Edit } from 'lucide-react';
+import AddEventModal from './modals/AddEventModal';
+import { eventsAPI } from '../services/api';
+
+interface Event {
+  _id: string;
+  name: string;
+  date: string;
+  time: string;
+  location: string;
+  type: string;
+  expectedAttendees: number;
+  description?: string;
+  status: string;
+}
+
+type NewEvent = Omit<Event, '_id'>;
+
+type EditEventModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  event: Event | null;
+  onSubmit: (eventData: Partial<Event>) => void;
+};
+
+const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event, onSubmit }) => {
+  const [formData, setFormData] = useState<Partial<Event>>(event || {});
+
+  useEffect(() => {
+    setFormData(event || {});
+  }, [event]);
+
+  const eventTypes = [
+    'Service',
+    'Study',
+    'Conference',
+    'Meeting',
+    'Outreach',
+    'Social',
+    'Training',
+  ];
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData) onSubmit(formData);
+  };
+
+  if (!isOpen || !event) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Edit Event</h2>
+            <p className="text-sm text-gray-600 mt-1">Update event information.</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+            <Edit className="w-6 h-6" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Event Name *</label>
+            <input type="text" id="name" name="name" value={formData.name || ''} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+              <input type="date" id="date" name="date" value={formData.date ? formData.date.split('T')[0] : ''} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-2">Time *</label>
+              <input type="time" id="time" name="time" value={formData.time || ''} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">Location *</label>
+            <input type="text" id="location" name="location" value={formData.location || ''} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">Event Type *</label>
+            <select id="type" name="type" value={formData.type || ''} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="">Select event type</option>
+              {eventTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="expectedAttendees" className="block text-sm font-medium text-gray-700 mb-2">Expected Attendees</label>
+            <input type="number" id="expectedAttendees" name="expectedAttendees" value={formData.expectedAttendees || 0} onChange={handleChange} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea id="description" name="description" value={formData.description || ''} onChange={handleChange} rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" />
+          </div>
+          <div className="flex justify-end space-x-3 pt-4">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200">Cancel</button>
+            <button type="submit" className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors duration-200">Update Event</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const Events: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const events = [
-    {
-      id: 1,
-      name: 'Morning Class Evangelism',
-      date: '2024-12-15',
-      time: '09:00',
-      location: 'Main Hall',
-      type: 'Service',
-      expected: 150,
-      status: 'Upcoming'
-    },
-    {
-      id: 2,
-      name: 'Weekly Fellowship',
-      date: '2024-12-18',
-      time: '19:00',
-      location: 'Conference Room',
-      type: 'Study',
-      expected: 80,
-      status: 'Upcoming'
-    },
-    {
-      id: 3,
-      name: 'Lunch Hour Fellowship',
-      date: '2024-12-10',
-      time: '14:00',
-      location: 'Main Hall',
-      type: 'Conference',
-      expected: 200,
-      status: 'Completed'
-    },
-    {
-      id: 4,
-      name: 'Youth Conference',
-      date: '2024-12-20',
-      time: '10:00',
-      location: 'Youth Center',
-      type: 'Conference',
-      expected: 120,
-      status: 'Upcoming'
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true);
+      try {
+        const res = await eventsAPI.getAll({ limit: 100 });
+        setEvents(res.events || []);
+      } catch (e) {
+        // handle error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  const handleAddEvent = async (eventData: NewEvent) => {
+    try {
+      await eventsAPI.create(eventData);
+      const res = await eventsAPI.getAll({ limit: 100 });
+      setEvents(res.events || []);
+    } catch (e) {
+      // handle error
     }
-  ];
+  };
+
+  const handleEditClick = (event: Event) => {
+    setSelectedEvent(event);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditEvent = async (eventData: Partial<Event>) => {
+    if (!selectedEvent) return;
+    try {
+      await eventsAPI.update(selectedEvent._id, eventData);
+      const res = await eventsAPI.getAll({ limit: 100 });
+      setEvents(res.events || []);
+      setIsEditModalOpen(false);
+      setSelectedEvent(null);
+    } catch (e) {
+      // handle error
+    }
+  };
 
   const filteredEvents = events.filter(event =>
     event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,13 +181,17 @@ const Events: React.FC = () => {
   };
 
   return (
+    <>
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Event Management</h1>
           <p className="text-gray-600 mt-1">Schedule and manage fellowship events</p>
         </div>
-        <button className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 flex items-center space-x-2">
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 flex items-center space-x-2"
+        >
           <Plus className="w-4 h-4" />
           <span>Add Event</span>
         </button>
@@ -118,12 +236,12 @@ const Events: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredEvents.map((event) => (
-                <tr key={event.id} className="hover:bg-gray-50 transition-colors duration-200">
+                <tr key={event._id} className="hover:bg-gray-50 transition-colors duration-200">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {event.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {event.date}
+                    {event.date ? event.date.split('T')[0] : ''}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {event.time}
@@ -135,7 +253,7 @@ const Events: React.FC = () => {
                     {event.type}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {event.expected}
+                    {event.expectedAttendees}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
@@ -143,8 +261,8 @@ const Events: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <button className="text-blue-600 hover:text-blue-800 transition-colors duration-200">
-                      <CalendarIcon className="w-4 h-4" />
+                    <button className="text-blue-600 hover:text-blue-800 transition-colors duration-200" onClick={() => handleEditClick(event)}>
+                      <Edit className="w-4 h-4" />
                     </button>
                   </td>
                 </tr>
@@ -154,6 +272,19 @@ const Events: React.FC = () => {
         </div>
       </div>
     </div>
+
+    <AddEventModal
+      isOpen={isAddModalOpen}
+      onClose={() => setIsAddModalOpen(false)}
+      onSubmit={handleAddEvent}
+    />
+    <EditEventModal
+      isOpen={isEditModalOpen}
+      onClose={() => { setIsEditModalOpen(false); setSelectedEvent(null); }}
+      event={selectedEvent}
+      onSubmit={handleEditEvent}
+    />
+    </>
   );
 };
 

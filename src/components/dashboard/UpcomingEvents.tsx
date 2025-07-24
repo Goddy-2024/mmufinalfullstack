@@ -1,27 +1,17 @@
 import React from 'react';
 
-const UpcomingEvents: React.FC = () => {
-  const events = [
-    {
-      name: 'Youth Conference',
-      date: 'Dec 15, 2024',
-      status: 'Upcoming',
-      statusColor: 'bg-blue-100 text-blue-800'
-    },
-    {
-      name: 'Christmas Service',
-      date: 'Dec 25, 2024',
-      status: 'Confirmed',
-      statusColor: 'bg-green-100 text-green-800'
-    },
-    {
-      name: 'New Year Service',
-      date: 'Jan 1, 2025',
-      status: 'Planning',
-      statusColor: 'bg-purple-100 text-purple-800'
-    },
-  ];
+interface UpcomingEvent {
+  name: string;
+  date: string;
+  status: string;
+  statusColor: string;
+}
 
+interface UpcomingEventsProps {
+  events: UpcomingEvent[];
+}
+
+const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events }) => {
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
       <div className="mb-6">

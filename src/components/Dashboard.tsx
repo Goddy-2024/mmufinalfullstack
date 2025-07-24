@@ -1,40 +1,67 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Users, Calendar, UserPlus, TrendingUp } from 'lucide-react';
 import StatsCard from './dashboard/StatsCard';
 import ActivityList from './dashboard/ActivityList';
 import UpcomingEvents from './dashboard/UpcomingEvents';
+import { dashboardAPI } from '../services/api';
+
+const statusColorMap: Record<string, string> = {
+  Upcoming: 'bg-blue-100 text-blue-800',
+  Confirmed: 'bg-green-100 text-green-800',
+  Planning: 'bg-purple-100 text-purple-800',
+  Cancelled: 'bg-red-100 text-red-800',
+};
+
+type StatColor = 'blue' | 'green' | 'purple' | 'orange';
 
 const Dashboard: React.FC = () => {
-  const stats = [
-    {
-      title: 'Total Members',
-      value: '145',
-      subtitle: 'Active fellowship members',
-      icon: Users,
-      color: 'blue'
-    },
-    {
-      title: "This Month's Events",
-      value: '8',
-      subtitle: 'Scheduled activities',
-      icon: Calendar,
-      color: 'green'
-    },
-    {
-      title: 'New Members',
-      value: '12',
-      subtitle: 'Joined this month',
-      icon: UserPlus,
-      color: 'purple'
-    },
-    {
-      title: 'Attendance Rate',
-      value: '78%',
-      subtitle: 'Average event attendance',
-      icon: TrendingUp,
-      color: 'orange'
-    },
-  ];
+  const [stats, setStats] = useState([
+    { title: 'Total Members', value: '-', subtitle: 'Active fellowship members', icon: Users, color: 'blue' as StatColor },
+    { title: "This Month's Events", value: '-', subtitle: 'Scheduled activities', icon: Calendar, color: 'green' as StatColor },
+    { title: 'New Members', value: '-', subtitle: 'Joined this month', icon: UserPlus, color: 'purple' as StatColor },
+    { title: 'Attendance Rate', value: '-', subtitle: 'Average event attendance', icon: TrendingUp, color: 'orange' as StatColor },
+  ]);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      setLoading(true);
+      try {
+        const res = await dashboardAPI.getStats();
+        if (res.stats) {
+          setStats([
+            { title: 'Total Members', value: res.stats.totalMembers?.toString() || '0', subtitle: 'Active fellowship members', icon: Users, color: 'blue' as StatColor },
+            { title: "This Month's Events", value: res.stats.thisMonthEvents?.toString() || '0', subtitle: 'Scheduled activities', icon: Calendar, color: 'green' as StatColor },
+            { title: 'New Members', value: res.stats.newMembersThisMonth?.toString() || '0', subtitle: 'Joined this month', icon: UserPlus, color: 'purple' as StatColor },
+            { title: 'Attendance Rate', value: res.stats.attendanceRate || '0%', subtitle: 'Average event attendance', icon: TrendingUp, color: 'orange' as StatColor },
+          ]);
+        }
+        if (res.recentActivities) {
+          setActivities(res.recentActivities.map((a: any) => ({
+            name: a.name,
+            attendees: a.attendees,
+            timeAgo: a.timeAgo,
+            color: 'blue', // You can enhance this to use different colors based on event type
+          })));
+        }
+        if (res.upcomingEvents) {
+          setUpcomingEvents(res.upcomingEvents.map((e: any) => ({
+            name: e.name,
+            date: e.date,
+            status: e.status,
+            statusColor: statusColorMap[e.status] || 'bg-gray-100 text-gray-800',
+          })));
+        }
+      } catch (e) {
+        // handle error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -52,8 +79,8 @@ const Dashboard: React.FC = () => {
 
       {/* Activity Sections */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <ActivityList />
-        <UpcomingEvents />
+        <ActivityList activities={activities} />
+        <UpcomingEvents events={upcomingEvents} />
       </div>
     </div>
   );
