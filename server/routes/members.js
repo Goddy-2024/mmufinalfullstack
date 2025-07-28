@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Member from '../models/Member.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
@@ -14,6 +15,41 @@ router.get('/', authenticate, async (req, res) => {
       department = '',
       status = ''
     } = req.query;
+
+    // Check if MongoDB is connected
+    if (mongoose.connection.readyState !== 1) {
+      // Return mock data if database is not connected
+      const mockMembers = [
+        {
+          _id: '1',
+          name: 'Godswill Omondi Ajuoga',
+          email: 'gaoajuoga@gmail.com',
+          phone: '+254740275539',
+          department: 'IT & Video',
+          joinDate: '2024-08-28',
+          status: 'Active'
+        },
+        {
+          _id: '2',
+          name: 'William Ndiema',
+          email: 'william.ndiema@gmail.com',
+          phone: '+254700000000',
+          department: 'Worship',
+          joinDate: '2023-08-28',
+          status: 'Active'
+        }
+      ];
+
+      return res.json({
+        members: mockMembers,
+        pagination: {
+          current: parseInt(page),
+          pages: 1,
+          total: mockMembers.length,
+          limit: parseInt(limit)
+        }
+      });
+    }
 
     // Build query
     const query = {};

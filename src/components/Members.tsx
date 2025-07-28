@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, UserPlus, Edit } from 'lucide-react';
+import { Search, UserPlus, Edit, Trash2 } from 'lucide-react';
 import AddMemberModal from './modals/AddMemberModal';
 import { membersAPI } from '../services/api';
 
@@ -151,6 +151,16 @@ const Members: React.FC = () => {
     }
   };
 
+  const handleDeleteMember = async (memberId: string) => {
+    if (!window.confirm('Are you sure you want to delete this member?')) return;
+    try {
+      await membersAPI.delete(memberId);
+      setMembers(members => members.filter(m => m._id !== memberId));
+    } catch (err) {
+      alert('Failed to delete member.');
+    }
+  };
+
   const filteredMembers = members.filter((member) =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -234,8 +244,11 @@ const Members: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <button className="text-blue-600 hover:text-blue-800 transition-colors duration-200" onClick={() => handleEditClick(member)}>
+                      <button onClick={() => handleEditClick(member)} className="text-blue-600 hover:text-blue-800 transition-colors duration-200">
                         <Edit className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDeleteMember(member._id)} className="text-red-600 hover:text-red-800 transition-colors duration-200 ml-2">
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </td>
                   </tr>

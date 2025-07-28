@@ -8,6 +8,7 @@ const getAuthToken = () => {
 // Create headers with auth token
 const createHeaders = () => {
   const token = getAuthToken();
+  
   return {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` })
@@ -17,6 +18,7 @@ const createHeaders = () => {
 // Generic API request function
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
+  console.log(`Making API request to: ${url}`);
   const config: RequestInit = {
     headers: createHeaders(),
     ...options
@@ -24,7 +26,9 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
 
   try {
     const response = await fetch(url, config);
+    console.log(`Response status: ${response.status}`);
     const data = await response.json();
+    console.log(`Response data:`, data);
 
     if (!response.ok) {
       throw new Error(data.message || 'API request failed');
@@ -173,11 +177,17 @@ export const eventsAPI = {
 // Dashboard API
 export const dashboardAPI = {
   getStats: async () => {
-    return apiRequest('/dashboard/stats');
+    console.log('Calling dashboard stats API...');
+    const result = await apiRequest('/dashboard/stats');
+    console.log('Dashboard stats result:', result);
+    return result;
   },
 
   getAttendanceTrend: async () => {
-    return apiRequest('/dashboard/attendance-trend');
+    console.log('Calling attendance trend API...');
+    const result = await apiRequest('/dashboard/attendance-trend');
+    console.log('Attendance trend result:', result);
+    return result;
   }
 };
 
@@ -197,5 +207,47 @@ export const reportsAPI = {
 
   getGrowthMetrics: async () => {
     return apiRequest('/reports/growth-metrics');
+  }
+};
+
+// Registration Forms API
+export const registrationAPI = {
+  generateForm: async (formData: {
+    title?: string;
+    description?: string;
+    maxSubmissions?: number;
+    expiresInDays?: number;
+  }) => {
+    return apiRequest('/registration/generate', {
+      method: 'POST',
+      body: JSON.stringify(formData)
+    });
+  },
+
+  getAllForms: async () => {
+    return apiRequest('/registration/forms');
+  },
+
+  getFormDetails: async (formId: string) => {
+    return apiRequest(`/registration/forms/${formId}`);
+  },
+
+  submitForm: async (formId: string, memberData: any) => {
+    return apiRequest(`/registration/forms/${formId}/submit`, {
+      method: 'POST',
+      body: JSON.stringify(memberData)
+    });
+  },
+
+  deactivateForm: async (formId: string) => {
+    return apiRequest(`/registration/forms/${formId}/deactivate`, {
+      method: 'PATCH'
+    });
+  },
+
+  deleteForm: async (formId: string) => {
+    return apiRequest(`/registration/forms/${formId}`, {
+      method: 'DELETE'
+    });
   }
 };

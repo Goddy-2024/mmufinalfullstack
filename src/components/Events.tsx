@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit } from 'lucide-react';
+import { Search, Plus, Edit, Trash2 } from 'lucide-react';
 import AddEventModal from './modals/AddEventModal';
 import { eventsAPI } from '../services/api';
 
@@ -161,6 +161,16 @@ const Events: React.FC = () => {
     }
   };
 
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!window.confirm('Are you sure you want to delete this event?')) return;
+    try {
+      await eventsAPI.delete(eventId);
+      setEvents(events => events.filter(e => e._id !== eventId));
+    } catch (err) {
+      alert('Failed to delete event.');
+    }
+  };
+
   const filteredEvents = events.filter(event =>
     event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     event.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -264,6 +274,7 @@ const Events: React.FC = () => {
                     <button className="text-blue-600 hover:text-blue-800 transition-colors duration-200" onClick={() => handleEditClick(event)}>
                       <Edit className="w-4 h-4" />
                     </button>
+                    <button onClick={() => handleDeleteEvent(event._id)} style={{ color: 'red', marginLeft: 8 }}><Trash2 /></button>
                   </td>
                 </tr>
               ))}

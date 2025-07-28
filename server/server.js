@@ -12,9 +12,18 @@ import memberRoutes from './routes/members.js';
 import eventRoutes from './routes/events.js';
 import reportRoutes from './routes/reports.js';
 import dashboardRoutes from './routes/dashboard.js';
+import registrationRoutes from './routes/registration.js';
 
 // Load environment variables
 dotenv.config();
+
+// Set default environment variables for development
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'your-super-secret-jwt-key-change-this-in-production';
+}
+if (!process.env.CLIENT_URL) {
+  process.env.CLIENT_URL = 'http://localhost:5174';
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,7 +42,7 @@ app.use(limiter);
 // CORS configuration
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5174',
-  credentials: true
+  credentials: true 
 }));
 
 // Body parsing middleware
@@ -53,6 +62,7 @@ app.use('/api/members', memberRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/registration', registrationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

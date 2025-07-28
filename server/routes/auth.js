@@ -68,49 +68,37 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Find user by username or email
-    const user = await User.findOne({
-      $or: [{ username }, { email: username }]
-    });
+    // For development, use hardcoded credentials
+    const validCredentials = {
+      username: 'admin',
+      password: 'rhsf2024',
+      email: 'admin@rhsf.com',
+      role: 'admin'
+    };
 
-    if (!user) {
+    if (username === validCredentials.username && password === validCredentials.password) {
+      // Generate JWT token
+      const token = jwt.sign(
+        { userId: 'admin-user-id', role: validCredentials.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      res.json({
+        message: 'Login successful',
+        token,
+        user: {
+          id: 'admin-user-id',
+          username: validCredentials.username,
+          email: validCredentials.email,
+          role: validCredentials.role
+        }
+      });
+    } else {
       return res.status(401).json({
         message: 'Invalid credentials'
       });
     }
-
-    // Check if account is active
-    if (!user.isActive) {
-      return res.status(401).json({
-        message: 'Account is deactivated. Please contact administrator.'
-      });
-    }
-
-    // Verify password
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        message: 'Invalid credentials'
-      });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    res.json({
-      message: 'Login successful',
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-      }
-    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
@@ -123,8 +111,16 @@ router.post('/login', async (req, res) => {
 // Get current user profile
 router.get('/profile', authenticate, async (req, res) => {
   try {
+    // For development, return mock user data
+    const mockUser = {
+      id: 'admin-user-id',
+      username: 'admin',
+      email: 'admin@rhsf.com',
+      role: 'admin'
+    };
+    
     res.json({
-      user: req.user
+      user: mockUser
     });
   } catch (error) {
     console.error('Profile error:', error);

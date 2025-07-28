@@ -22,6 +22,8 @@ export const useAuth = () => {
       const token = localStorage.getItem('authToken');
       const savedUser = localStorage.getItem('user');
 
+      console.log('Checking auth status - token:', !!token, 'user:', !!savedUser);
+
       if (token && savedUser) {
         setUser(JSON.parse(savedUser));
         setIsAuthenticated(true);
@@ -30,6 +32,7 @@ export const useAuth = () => {
         try {
           await authAPI.getProfile();
         } catch (error) {
+          console.error('Token validation failed:', error);
           // Token is invalid, clear auth
           logout();
         }

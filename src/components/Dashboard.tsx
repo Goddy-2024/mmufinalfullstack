@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Users, Calendar, UserPlus, TrendingUp } from 'lucide-react';
+import { Users, Calendar, UserPlus, TrendingUp, Link } from 'lucide-react';
 import StatsCard from './dashboard/StatsCard';
 import ActivityList from './dashboard/ActivityList';
 import UpcomingEvents from './dashboard/UpcomingEvents';
+import RegistrationForms from './dashboard/RegistrationForms';
+import GenerateFormModal from './modals/GenerateFormModal';
 import { dashboardAPI } from '../services/api';
 
 const statusColorMap: Record<string, string> = {
@@ -24,12 +26,16 @@ const Dashboard: React.FC = () => {
   const [activities, setActivities] = useState<any[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isGenerateFormModalOpen, setIsGenerateFormModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchDashboard = async () => {
       setLoading(true);
       try {
+        console.log('Fetching dashboard data...');
         const res = await dashboardAPI.getStats();
+        console.log('Dashboard response:', res);
+        
         if (res.stats) {
           setStats([
             { title: 'Total Members', value: res.stats.totalMembers?.toString() || '0', subtitle: 'Active fellowship members', icon: Users, color: 'blue' as StatColor },
@@ -55,6 +61,7 @@ const Dashboard: React.FC = () => {
           })));
         }
       } catch (e) {
+        console.error('Error fetching dashboard data:', e);
         // handle error
       } finally {
         setLoading(false);
@@ -65,9 +72,18 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Welcome to MMU RHSF Fellowship Management System</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-1">Welcome to MMU RHSF Fellowship Management System</p>
+        </div>
+        <button
+          onClick={() => setIsGenerateFormModalOpen(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2"
+        >
+          <Link className="w-4 h-4" />
+          <span>Generate Form</span>
+        </button>
       </div>
 
       {/* Stats Grid */}
@@ -82,6 +98,20 @@ const Dashboard: React.FC = () => {
         <ActivityList activities={activities} />
         <UpcomingEvents events={upcomingEvents} />
       </div>
+
+      {/* Registration Forms Section */}
+      <RegistrationForms />
+
+      <GenerateFormModal
+        isOpen={isGenerateFormModalOpen}
+        onClose={() => setIsGenerateFormModalOpen(false)}
+        onFormGenerated={(formData) => {
+          console.log('Form generated:', formData);
+          setIsGenerateFormModalOpen(false);
+          // Force a page refresh to show the new form in the list
+          window.location.reload();
+        }}
+      />
     </div>
   );
 };
