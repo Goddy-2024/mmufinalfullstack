@@ -19,7 +19,7 @@ router.post('/generate', authenticate, async (req, res) => {
       description: description || 'Welcome to MMU RHSF Fellowship! Please fill out this form to join our community.',
       maxSubmissions: maxSubmissions || 100,
       expiresAt,
-      createdBy: req.user.id
+      
     });
 
     await form.save();
@@ -49,7 +49,7 @@ router.post('/generate', authenticate, async (req, res) => {
 // Get all registration forms (Admin only)
 router.get('/forms', authenticate, async (req, res) => {
   try {
-    const forms = await RegistrationForm.find({ createdBy: req.user.id })
+    const forms = await RegistrationForm.find({})
       .populate('submissions.member', 'name email department')
       .sort({ createdAt: -1 });
 
@@ -210,8 +210,7 @@ router.patch('/forms/:formId/deactivate', authenticate, async (req, res) => {
     const { formId } = req.params;
     
     const form = await RegistrationForm.findOne({ 
-      formId, 
-      createdBy: req.user.id 
+      formId
     });
     
     if (!form) {
@@ -244,8 +243,7 @@ router.delete('/forms/:formId', authenticate, async (req, res) => {
     const { formId } = req.params;
     
     const form = await RegistrationForm.findOneAndDelete({ 
-      formId, 
-      createdBy: req.user.id 
+      formId
     });
     
     if (!form) {

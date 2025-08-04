@@ -45,11 +45,6 @@ const eventSchema = new mongoose.Schema({
     enum: ['Planning', 'Upcoming', 'Ongoing', 'Completed', 'Cancelled'],
     default: 'Planning'
   },
-  organizer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Member',
-    required: true
-  },
   attendees: [{
     member: {
       type: mongoose.Schema.Types.ObjectId,

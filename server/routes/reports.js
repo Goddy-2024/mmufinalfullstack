@@ -178,7 +178,7 @@ router.get('/growth-metrics', authenticate, async (req, res) => {
       })
     ]);
 
-    // Calculate growth percentages
+    // Calculate growth percentagesqz 
     const memberGrowth = lastMonthMembers > 0 
       ? ((thisMonthMembers - lastMonthMembers) / lastMonthMembers * 100).toFixed(1)
       : '0.0';

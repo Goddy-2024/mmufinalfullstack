@@ -47,14 +47,15 @@ const Reports: React.FC = () => {
     if (!reportData) return;
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      printWindow.document.write('<html><head><title>Fellowship Report</title>');
-      printWindow.document.write('<style>body{font-family:sans-serif;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ccc;padding:8px;} th{background:#f0f0f0;}</style>');
+      printWindow.document.write('<html><head><title>Fellowship Report</title><link rel="icon" type="image/svg+xml" href="/src/assets/rhsflogo-removebg-preview.ico" />');
+      printWindow.document.write('<style>body{font-family:sans-serif;} h2{text-align:center; display: flex; align-items: center; } .icon{text-align: center; width: 5%;}   h2{text-align: center;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ccc;padding:8px;} th{background:#f0f0f0;}</style>');
       printWindow.document.write('</head><body>');
-      printWindow.document.write('<h1>Fellowship Report</h1>');
-      printWindow.document.write('<h2>Events Attended</h2>');
-      printWindow.document.write('<table><tr><th>Date</th><th>Event Name</th><th>Number of Attendees</th></tr>');
+      printWindow.document.write('<img src="/src/assets/rhsflogo-removebg-preview.png" class="icon"/>');
+      printWindow.document.write('<h2>MULTIMEDIA UNIVERSITY REPENTANCE AND HOLINESS STUDENTS FELLOWSHIP REPORT</h2>');
+      printWindow.document.write('<h2>Mountly Fellowship Activities</h2>');
+      printWindow.document.write('<table><tr><th>DATE</th><th>ACTIVITY NAME</th><th>NO. OF ATTENDEES</th><th>DESCRIPTION</th></tr>');
       eventsList.forEach((event: any) => {
-        printWindow.document.write(`<tr><td>${event.date ? event.date.split('T')[0] : ''}</td><td>${event.name}</td><td>${event.actualAttendees ?? event.expectedAttendees ?? '-'}</td></tr>`);
+        printWindow.document.write(`<tr><td>${event.date ? event.date.split('T')[0] : ''}</td><td>${event.name}</td><td>${event.expectedAttendees}</td><td>${event.description}</td></tr>`);
       });
       printWindow.document.write('</table>');
       printWindow.document.write('<h2>Monthly Attendance Trend</h2>');

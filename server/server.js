@@ -22,7 +22,7 @@ if (!process.env.JWT_SECRET) {
   process.env.JWT_SECRET = 'your-super-secret-jwt-key-change-this-in-production';
 }
 if (!process.env.CLIENT_URL) {
-  process.env.CLIENT_URL = 'http://localhost:5174';
+  process.env.CLIENT_URL = 'http://localhost:5173';
 }
 
 const app = express();
@@ -34,7 +34,7 @@ app.use(helmet());
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 1000, // limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);

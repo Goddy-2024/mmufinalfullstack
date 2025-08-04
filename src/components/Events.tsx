@@ -33,12 +33,12 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event,
 
   const eventTypes = [
     'Service',
-    'Study',
+    'Fellowship',
     'Conference',
     'Meeting',
     'Outreach',
-    'Social',
-    'Training',
+    'Service',
+    'Prayer',
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {

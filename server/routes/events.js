@@ -91,7 +91,6 @@ router.get('/', authenticate, async (req, res) => {
     
     const [events, total] = await Promise.all([
       Event.find(query)
-        .populate('organizer', 'name email')
         .sort({ date: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
@@ -120,8 +119,8 @@ router.get('/', authenticate, async (req, res) => {
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const event = await Event.findById(req.params.id)
-      .populate('organizer', 'name email phone')
-      .populate('attendees.member', 'name email');
+      .populate('name phone')
+      .populate('attendees.member', 'name');
     
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
@@ -140,21 +139,13 @@ router.get('/:id', authenticate, async (req, res) => {
 // Create new event
 router.post('/', authenticate, authorize('admin', 'moderator'), async (req, res) => {
   try {
-    // Verify organizer exists
-    const organizer = await Member.findById(req.body.organizer);
-    if (!organizer) {
-      return res.status(400).json({ message: 'Organizer not found' });
-    }
-
     const event = new Event(req.body);
     await event.save();
 
-    const populatedEvent = await Event.findById(event._id)
-      .populate('organizer', 'name email');
 
     res.status(201).json({
       message: 'Event created successfully',
-      event: populatedEvent
+      event
     });
   } catch (error) {
     console.error('Create event error:', error);
@@ -180,7 +171,7 @@ router.put('/:id', authenticate, authorize('admin', 'moderator'), async (req, re
       req.params.id,
       req.body,
       { new: true, runValidators: true }
-    ).populate('organizer', 'name email');
+    ).populate('name');
 
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
@@ -254,7 +245,7 @@ router.post('/:id/attendees', authenticate, authorize('admin', 'moderator'), asy
     await event.save();
 
     const updatedEvent = await Event.findById(event._id)
-      .populate('attendees.member', 'name email');
+      .populate('attendees.member', 'name');
 
     res.json({
       message: 'Attendee added successfully',
