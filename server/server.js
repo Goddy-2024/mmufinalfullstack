@@ -22,7 +22,7 @@ if (!process.env.JWT_SECRET) {
   process.env.JWT_SECRET = 'your-super-secret-jwt-key-change-this-in-production';
 }
 if (!process.env.CLIENT_URL) {
-  process.env.CLIENT_URL = 'http://localhost:5173';
+  process.env.CLIENT_URL = 'https://mmuful.netlify.app/';
 }
 
 const app = express();
@@ -41,7 +41,7 @@ app.use(limiter);
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5174',
+  origin: process.env.CLIENT_URL || 'https://mmuful.netlify.app/',
   credentials: true 
 }));
 
